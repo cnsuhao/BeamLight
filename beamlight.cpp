@@ -38,25 +38,21 @@ void BeamLight::OnNodeSet(Node* node)
     flareModel->SetModel(CACHE->GetResource<Model>("Models/Plane.mdl"));
     flareMaterial_ = CACHE->GetResource<Material>("Materials/Flare.xml")->Clone();
     flareModel->SetMaterial(flareMaterial_);
-
-//    SetColor(LucKey::RandomColor(1.0f));
 }
 
 void BeamLight::Update(float timeStep)
 {
     Vector3 euler{ node_->GetWorldRotation().EulerAngles() };
 
-    float shift{ 0.23f + 0.05f * euler.x_ };
-    SetColor(Color(MC->Sine(0.1f, 0.0f, 1.0f, shift),
-                   MC->Sine(0.2f, 0.0f, 1.0f, shift),
-                   MC->Sine(0.3f, 0.0f, 1.0f, shift),
+    float shift{ (0.23f + 0.05f * euler.x_ * 0.5f) + (euler.y_ / 360.0f) };
+    SetColor(Color(MC->Sine(0.111f, 0.0f, 1.0f, shift),
+                   MC->Sine(0.222f, 0.0f, 1.0f, shift + .23f),
+                   MC->Sine(0.333f, 0.0f, 1.0f, shift + .42f),
                    1.0f));
-    light_->SetBrightness(euler.x_ != -90.0f ? Pow(MC->Sine(0.125f, 0.0f, 1.0f, euler.y_ / 90.0f), 0.75f)
-                                            : 1.0f);
 
     Vector3 camDeltaPos{ node_->GetWorldPosition() - MC->GetCameraPosition() };
 
-    node_->RotateAround(Vector3::ZERO, Quaternion(timeStep * 42.0f, Vector3::UP), TS_WORLD);
+    node_->RotateAround(Vector3::ZERO, Quaternion(timeStep * 5.0f, Vector3::UP), TS_WORLD);
     beamNode_->LookAt(node_->GetWorldPosition() + node_->GetDirection(), camDeltaPos);
     float normAngle{ 1.0f - node_->GetDirection().Angle(camDeltaPos) / 90.0f };
     Color lightColor{ light_->GetColor() * light_->IsEnabled() * light_->GetBrightness() };
@@ -64,13 +60,14 @@ void BeamLight::Update(float timeStep)
     Color flareColor{ lightColor * Clamp(Pow(0.5f - normAngle, 4.0f) - 0.23f, 0.0f, 1.0f) };
     beamMaterial_->SetShaderParameter("MatDiffColor", beamColor);
     flareMaterial_->SetShaderParameter("MatDiffColor", flareColor);
-    flareNode_->SetScale(normAngle);
+    flareNode_->SetScale(normAngle * (0.5f + lightColor.Average() * 0.32f));
 }
 
 void BeamLight::SetColor(Color color)
 {
     light_->SetColor(color);
-    lampMaterial_->SetShaderParameter("MatDiffColor", light_->GetColor() * light_->IsEnabled() * light_->GetBrightness());
+    lampMaterial_->SetShaderParameter("MatDiffColor", 0.333f * (2.0f * light_->GetColor() + Color::WHITE) * light_->IsEnabled() * light_->GetBrightness());
+    lampMaterial_->SetShaderParameter("MatEmissiveColor",  100.0f * light_->GetColor() * light_->IsEnabled() * light_->GetBrightness());
 }
 
 

@@ -22,8 +22,8 @@ void MasterControl::Setup()
 {
     SetRandomSeed(TIME->GetSystemTime());
 
-    engineParameters_[EP_LOG_NAME] = GetSubsystem<FileSystem>()->GetAppPreferencesDir("luckey", "logs")+"FlashlightBillboard.log";
-    engineParameters_[EP_WINDOW_TITLE] = "FlashlightBillboard";
+    engineParameters_[EP_LOG_NAME] = GetSubsystem<FileSystem>()->GetAppPreferencesDir("luckey", "logs")+"BeamLight.log";
+    engineParameters_[EP_WINDOW_TITLE] = "BeamLight";
     engineParameters_[EP_WINDOW_ICON] = "icon.png";
     engineParameters_[EP_WORKER_THREADS] = false;
     engineParameters_[EP_RESOURCE_PATHS] = "Data;CoreData;Resources;";
@@ -38,8 +38,9 @@ void MasterControl::Start()
     Zone* zone{ scene_->CreateComponent<Zone>() };
     zone->SetAmbientColor(Color::BLACK);
 
+    //Create floor and roof
     Node* floorNode{ scene_->CreateChild("Floor") };
-    floorNode->SetPosition(Vector3::DOWN * 2.0f);
+    floorNode->SetPosition(Vector3::DOWN * 2.3f);
     floorNode->SetScale(Vector3(100.0f, 0.1f, 100.0f));
     floorNode->CreateComponent<StaticModel>()->SetModel(CACHE->GetResource<Model>("Models/Box.mdl"));
 
@@ -48,9 +49,10 @@ void MasterControl::Start()
     roofNode->SetScale(Vector3(100.0f, 0.1f, 100.0f));
     roofNode->CreateComponent<StaticModel>()->SetModel(CACHE->GetResource<Model>("Models/Box.mdl"));
 
+    //Create camera and viewport
     cameraNode_ = scene_->CreateChild("Camera");
-    cameraNode_->SetPosition(Vector3::UP + Vector3::BACK * 5.0f);
-    cameraNode_->LookAt(Vector3::ZERO);
+    cameraNode_->SetPosition(Vector3::UP + Vector3::BACK * 10.0f);
+    cameraNode_->LookAt(Vector3::DOWN * 0.5f);
 
     SharedPtr<Viewport> viewport{ new Viewport(context_, scene_, cameraNode_->CreateComponent<Camera>()) };
 
@@ -64,8 +66,9 @@ void MasterControl::Start()
 
     RENDERER->SetViewport(0, viewport);
 
+    //Create lights
     int rows{ 5 };
-    int columns{ 7 };
+    int columns{ 5 };
     for (int j{0}; j < rows; ++j) {
         for (int i{0}; i < columns; ++i) {
             if (j == rows - 1 && i != columns -1)
@@ -78,11 +81,6 @@ void MasterControl::Start()
             beamNode->CreateComponent<BeamLight>();
         }
     }
-
-//    Node* beamNode{ scene_->CreateChild("BeamLight") };
-//    beamNode->SetPosition(Vector3::UP);
-//    beamNode->LookAt(Vector3::UP + Vector3::UP, Vector3::UP, TS_WORLD);
-//    beamNode->CreateComponent<BeamLight>();
 
     SubscribeToEvent(E_SCENEUPDATE, URHO3D_HANDLER(MasterControl, HandleSceneUpdate));
 }
@@ -103,6 +101,7 @@ void MasterControl::HandleSceneUpdate(StringHash eventType, VariantMap& eventDat
     cameraNode_->Translate(Vector3(delta * (INPUT->GetKeyDown(KEY_D) - INPUT->GetKeyDown(KEY_A)),
                                    delta * (INPUT->GetKeyDown(KEY_Q) - INPUT->GetKeyDown(KEY_E)),
                                    delta * (INPUT->GetKeyDown(KEY_W) - INPUT->GetKeyDown(KEY_S))));
+
 }
 
 float MasterControl::Sine(const float freq, const float min, const float max, const float shift)

@@ -17,6 +17,7 @@ public:
 
     void SetColor(Color color);
 private:
+    float startEulerY_;
     Node* beamNode_;
     Node* flareNode_;
 

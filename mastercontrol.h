@@ -42,6 +42,8 @@ private:
     Scene* scene_;
     Node* cameraNode_;
 
+    BillboardSet* smoke_;
+
     float SinePhase(float freq, float shift);
 };
 
