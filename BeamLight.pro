@@ -18,13 +18,11 @@ CONFIG -= qt
 HEADERS += \
     luckey.h \
     mastercontrol.h \
-    sceneobject.h \
     beamlight.h
 
 SOURCES += \
     luckey.cpp \
     mastercontrol.cpp \
-    sceneobject.cpp \
     beamlight.cpp
 
 DISTFILES += \
