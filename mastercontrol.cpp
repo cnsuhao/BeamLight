@@ -40,8 +40,13 @@ void MasterControl::Start()
 
     Node* floorNode{ scene_->CreateChild("Floor") };
     floorNode->SetPosition(Vector3::DOWN * 2.0f);
-    floorNode->SetScale(Vector3(10.0f, 0.1f, 10.0f));
+    floorNode->SetScale(Vector3(100.0f, 0.1f, 100.0f));
     floorNode->CreateComponent<StaticModel>()->SetModel(CACHE->GetResource<Model>("Models/Box.mdl"));
+
+    Node* roofNode{ scene_->CreateChild("Floor") };
+    roofNode->SetPosition(Vector3::UP * 3.0f);
+    roofNode->SetScale(Vector3(100.0f, 0.1f, 100.0f));
+    roofNode->CreateComponent<StaticModel>()->SetModel(CACHE->GetResource<Model>("Models/Box.mdl"));
 
     cameraNode_ = scene_->CreateChild("Camera");
     cameraNode_->SetPosition(Vector3::UP + Vector3::BACK * 5.0f);
@@ -59,22 +64,25 @@ void MasterControl::Start()
 
     RENDERER->SetViewport(0, viewport);
 
-    int rows{ 3 };
-    int columns{ 5 };
-    for (int j{0}; j < 3; ++j) {
+    int rows{ 5 };
+    int columns{ 7 };
+    for (int j{0}; j < rows; ++j) {
         for (int i{0}; i < columns; ++i) {
+            if (j == rows - 1 && i != columns -1)
+                continue;
+
             Node* beamNode{ scene_->CreateChild("BeamLight") };
             beamNode->SetPosition(Vector3::FORWARD);
             beamNode->RotateAround(Vector3::ZERO, Quaternion(i * (360.0f / columns), Vector3::UP), TS_WORLD);
-            beamNode->RotateAround(Vector3::ZERO, Quaternion(45.0f - 45.0f * j, beamNode->GetRight()), TS_WORLD);
+            beamNode->RotateAround(Vector3::ZERO, Quaternion(90.0f - (180.0f / rows) * (j + 1), beamNode->GetRight()), TS_WORLD);
             beamNode->CreateComponent<BeamLight>();
         }
     }
 
-    Node* beamNode{ scene_->CreateChild("BeamLight") };
-    beamNode->SetPosition(Vector3::UP);
-    beamNode->LookAt(Vector3::UP + Vector3::UP, Vector3::UP, TS_WORLD);
-    beamNode->CreateComponent<BeamLight>();
+//    Node* beamNode{ scene_->CreateChild("BeamLight") };
+//    beamNode->SetPosition(Vector3::UP);
+//    beamNode->LookAt(Vector3::UP + Vector3::UP, Vector3::UP, TS_WORLD);
+//    beamNode->CreateComponent<BeamLight>();
 
     SubscribeToEvent(E_SCENEUPDATE, URHO3D_HANDLER(MasterControl, HandleSceneUpdate));
 }
@@ -97,3 +105,17 @@ void MasterControl::HandleSceneUpdate(StringHash eventType, VariantMap& eventDat
                                    delta * (INPUT->GetKeyDown(KEY_W) - INPUT->GetKeyDown(KEY_S))));
 }
 
+float MasterControl::Sine(const float freq, const float min, const float max, const float shift)
+{
+    float phase{SinePhase(freq, shift)};
+    float add{0.5f * (min + max)};
+    return LucKey::Sine(phase) * 0.5f * (max - min) + add;
+}
+float MasterControl::Cosine(const float freq, const float min, const float max, const float shift)
+{
+    return Sine(freq, min, max, shift + 0.25f);
+}
+float MasterControl::SinePhase(float freq, float shift)
+{
+    return M_PI * 2.0f * (freq * scene_->GetElapsedTime() + shift);
+}

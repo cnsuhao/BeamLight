@@ -33,10 +33,16 @@ public:
 
     Vector3 GetCameraPosition() const { return cameraNode_->GetWorldPosition(); }
     Vector3 GetCameraDirection() const { return cameraNode_->GetDirection(); }
+
+    float Sine(const float freq, const float min, const float max, const float shift = 0.0f);
+    float Cosine(const float freq, const float min, const float max, const float shift = 0.0f);
+
 private:
     static MasterControl* instance_;
     Scene* scene_;
     Node* cameraNode_;
+
+    float SinePhase(float freq, float shift);
 };
 
 #endif // MASTERCONTROL_H

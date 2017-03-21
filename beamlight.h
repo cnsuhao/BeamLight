@@ -15,12 +15,13 @@ public:
     virtual void OnNodeSet(Node* node);
     virtual void Update(float timeStep);
 
+    void SetColor(Color color);
 private:
     Node* beamNode_;
     Node* flareNode_;
 
     Light* light_;
-
+    SharedPtr<Material> lampMaterial_;
     SharedPtr<Material> beamMaterial_;
     SharedPtr<Material> flareMaterial_;
 };

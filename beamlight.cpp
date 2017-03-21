@@ -17,13 +17,11 @@ void BeamLight::OnNodeSet(Node* node)
 
     light_ = node_->CreateComponent<Light>();
     light_->SetLightType(LIGHT_SPOT);
-    light_->SetColor(LucKey::RandomColor(1.0f));
 
-    StaticModel* lightModel{ node_->CreateComponent<StaticModel>() };
-    lightModel->SetModel(CACHE->GetResource<Model>("Models/Lamp.mdl"));
-    SharedPtr<Material> lightMaterial_{ CACHE->GetResource<Material>("Materials/Light.xml")->Clone() };
-    lightMaterial_->SetShaderParameter("MatDiffColor", light_->GetColor());
-    lightModel->SetMaterial(0, lightMaterial_);
+    StaticModel* lampModel{ node_->CreateComponent<StaticModel>() };
+    lampModel->SetModel(CACHE->GetResource<Model>("Models/Lamp.mdl"));
+    lampMaterial_ = CACHE->GetResource<Material>("Materials/Lamp.xml")->Clone();
+    lampModel->SetMaterial(0, lampMaterial_);
 
     beamNode_ = node_->CreateChild("Beam");
     beamNode_->Translate(Vector3::FORWARD * 0.82f);
@@ -41,10 +39,21 @@ void BeamLight::OnNodeSet(Node* node)
     flareMaterial_ = CACHE->GetResource<Material>("Materials/Flare.xml")->Clone();
     flareModel->SetMaterial(flareMaterial_);
 
+//    SetColor(LucKey::RandomColor(1.0f));
 }
 
 void BeamLight::Update(float timeStep)
 {
+    Vector3 euler{ node_->GetWorldRotation().EulerAngles() };
+
+    float shift{ 0.23f + 0.05f * euler.x_ };
+    SetColor(Color(MC->Sine(0.1f, 0.0f, 1.0f, shift),
+                   MC->Sine(0.2f, 0.0f, 1.0f, shift),
+                   MC->Sine(0.3f, 0.0f, 1.0f, shift),
+                   1.0f));
+    light_->SetBrightness(euler.x_ != -90.0f ? Pow(MC->Sine(0.125f, 0.0f, 1.0f, euler.y_ / 90.0f), 0.75f)
+                                            : 1.0f);
+
     Vector3 camDeltaPos{ node_->GetWorldPosition() - MC->GetCameraPosition() };
 
     node_->RotateAround(Vector3::ZERO, Quaternion(timeStep * 42.0f, Vector3::UP), TS_WORLD);
@@ -56,6 +65,12 @@ void BeamLight::Update(float timeStep)
     beamMaterial_->SetShaderParameter("MatDiffColor", beamColor);
     flareMaterial_->SetShaderParameter("MatDiffColor", flareColor);
     flareNode_->SetScale(normAngle);
+}
+
+void BeamLight::SetColor(Color color)
+{
+    light_->SetColor(color);
+    lampMaterial_->SetShaderParameter("MatDiffColor", light_->GetColor() * light_->IsEnabled() * light_->GetBrightness());
 }
 
 
